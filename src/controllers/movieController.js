@@ -15,7 +15,27 @@ exports.getAllMovies = async (req, res) => {
     });
   }
 };
+exports.getMovieById = async (req, res) => {
+  try {
+    const movie = await Movie.findById(req.params.id);
+    if (!movie) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Movie not found'
+      });
+    }
 
+    res.status(200).json({
+      status: 'success',
+      data: movie
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'fail',
+      message: error.message
+    });
+  }
+};
 exports.createMovie = async (req, res) => {
   try {
     const videoResult = await cloudinary.uploader.upload(req.files.movieVideo[0].path, {
@@ -42,6 +62,38 @@ exports.createMovie = async (req, res) => {
     res.status(201).json({
       status: 'success',
       data: movie
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'fail',
+      message: error.message
+    });
+  }
+};
+exports.deleteMovie = async (req, res) => {
+  try {
+    const movie = await Movie.findById(req.params.id);
+    if (!movie) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Movie not found'
+      });
+    }
+
+    const extractPublicId = (url) => {
+      const parts = url.split('/');
+      return parts[parts.length - 1].split('.')[0];
+    };
+
+    await cloudinary.uploader.destroy(extractPublicId(movie.movieCover)); 
+    await cloudinary.uploader.destroy(extractPublicId(movie.movieVideo), { resource_type: 'video' }); 
+    await cloudinary.uploader.destroy(extractPublicId(movie.movieTrailer), { resource_type: 'video' }); 
+
+    await Movie.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Movie deleted successfully'
     });
   } catch (error) {
     res.status(400).json({

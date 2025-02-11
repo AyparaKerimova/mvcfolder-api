@@ -8,6 +8,8 @@ const router = express.Router();
 router.use(authMiddleware.protect);
 
 router.get('/', movieController.getAllMovies);
+router.get('/:id', movieController.getMovieById);
+
 router.post(
   '/',
   authMiddleware.restrictTo('admin'),
@@ -18,5 +20,7 @@ router.post(
   ]),
   movieController.createMovie
 );
+
+router.delete('/:id', authMiddleware.restrictTo('admin'), movieController.deleteMovie);
 
 module.exports = router;

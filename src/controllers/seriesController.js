@@ -15,7 +15,27 @@ exports.getAllSeries = async (req, res) => {
     });
   }
 };
+exports.getSeriesById = async (req, res) => {
+  try {
+    const series = await Series.findById(req.params.id);
+    if (!series) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Series not found'
+      });
+    }
 
+    res.status(200).json({
+      status: 'success',
+      data: series
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'fail',
+      message: error.message
+    });
+  }
+};
 exports.createSeries = async (req, res) => {
   try {
     const videoUrls = [];
@@ -46,6 +66,41 @@ exports.createSeries = async (req, res) => {
     res.status(201).json({
       status: 'success',
       data: series
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'fail',
+      message: error.message
+    });
+  }
+};
+exports.deleteSeries = async (req, res) => {
+  try {
+    const series = await Series.findById(req.params.id);
+    if (!series) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Series not found'
+      });
+    }
+
+    const extractPublicId = (url) => {
+      const parts = url.split('/');
+      return parts[parts.length - 1].split('.')[0];
+    };
+
+    await cloudinary.uploader.destroy(extractPublicId(series.serieCover)); 
+    await cloudinary.uploader.destroy(extractPublicId(series.serieTrailer), { resource_type: 'video' }); 
+
+    for (const videoUrl of series.serieVideos) {
+      await cloudinary.uploader.destroy(extractPublicId(videoUrl), { resource_type: 'video' });
+    }
+
+    await Series.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Series deleted successfully'
     });
   } catch (error) {
     res.status(400).json({
