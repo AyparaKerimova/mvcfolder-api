@@ -9,6 +9,7 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const movieRoutes = require('./routes/movieRoutes');
 const seriesRoutes = require('./routes/seriesRoutes');
+const messageRoutes = require('./routes/messageRoutes');
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/movies', movieRoutes);
 app.use('/api/v1/series', seriesRoutes);
+app.use('/api/v1/messages', messageRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
