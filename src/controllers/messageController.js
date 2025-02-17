@@ -108,22 +108,33 @@ exports.getConversation = async (req, res) => {
 
 exports.getAllConversations = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user?._id; 
+
+    if (!userId) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'User ID is required.',
+      });
+    }
 
     const messages = await Message.find({
-      $or: [{ sender: userId }, { receiver: userId }]
+      $or: [{ sender: userId }, { receiver: userId }],
     })
-    .sort({ createdAt: -1 })
-    .populate('sender receiver', 'fullName nickname role');
+      .sort({ createdAt: -1 }) 
+      .populate('sender receiver', 'fullName nickname role');
 
     const conversations = messages.reduce((acc, message) => {
-      const otherId = message.sender._id.equals(userId) 
-        ? message.receiver._id 
+      if (!message.sender || !message.receiver) {
+        return acc;
+      }
+
+      const otherId = message.sender._id.equals(userId)
+        ? message.receiver._id
         : message.sender._id;
-      
-      if (req.user.role === 'user') {
-        const otherUser = message.sender._id.equals(userId) 
-          ? message.receiver 
+
+      if (req.user?.role === 'user') {
+        const otherUser = message.sender._id.equals(userId)
+          ? message.receiver
           : message.sender;
         if (otherUser.role !== 'admin') {
           return acc;
@@ -134,23 +145,32 @@ exports.getAllConversations = async (req, res) => {
         acc[otherId] = {
           user: message.sender._id.equals(userId) ? message.receiver : message.sender,
           lastMessage: message,
-          unreadCount: message.receiver._id.equals(userId) && !message.isRead ? 1 : 0
+          unreadCount: message.receiver._id.equals(userId) && !message.isRead ? 1 : 0,
         };
       } else if (!message.isRead && message.receiver._id.equals(userId)) {
         acc[otherId].unreadCount++;
       }
-      
+
       return acc;
     }, {});
 
     res.status(200).json({
       status: 'success',
-      data: Object.values(conversations)
+      data: Object.values(conversations),
     });
   } catch (error) {
-    res.status(400).json({
+    console.error('Error fetching conversations:', error);
+
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid user ID.',
+      });
+    }
+
+    res.status(500).json({
       status: 'error',
-      message: error.message
+      message: 'Internal server error.',
     });
   }
 };
