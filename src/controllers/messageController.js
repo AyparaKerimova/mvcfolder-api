@@ -53,55 +53,36 @@ exports.getConversation = async (req, res) => {
   try {
     const { userId } = req.params;
     const currentUserId = req.user._id;
-
-    if (!userId || !currentUserId) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'User IDs are required.',
-      });
-    }
-
+    
     const otherUser = await User.findById(userId);
     if (!otherUser) {
       return res.status(404).json({
         status: 'error',
-        message: 'User not found.',
+        message: 'User not found'
       });
     }
 
     if (req.user.role === 'user' && otherUser.role !== 'admin') {
       return res.status(403).json({
         status: 'error',
-        message: 'Users can only view conversations with admins.',
+        message: 'Users can only view conversations with admins'
       });
     }
-
-    const generateConversationId = (userId1, userId2) => {
-      return [userId1, userId2].sort().join('_');
-    };
+    
     const conversationId = generateConversationId(currentUserId, userId);
 
     const messages = await Message.find({ conversationId })
-      .sort({ createdAt: 1 }) 
-      .populate('sender receiver', 'fullName nickname role'); 
+      .sort({ createdAt: 1 })
+      .populate('sender receiver', 'fullName nickname role');
 
     res.status(200).json({
       status: 'success',
-      data: messages,
+      data: messages
     });
   } catch (error) {
-    console.error('Error fetching conversation:', error);
-
-    if (error.name === 'CastError') {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Invalid user ID.',
-      });
-    }
-
-    res.status(500).json({
+    res.status(400).json({
       status: 'error',
-      message: 'Internal server error.',
+      message: error.message
     });
   }
 };
