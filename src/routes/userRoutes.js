@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.use(authMiddleware.protect);
 
-router.get('/', authMiddleware.restrictTo('admin'), userController.getAllUsers);
+router.get('/', userController.getAllUsers);
 router.get('/:id', userController.getUser);
 router.patch(
   '/update-profile',
