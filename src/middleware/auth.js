@@ -16,8 +16,9 @@ exports.protect = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
+    console.log("Decoded Token:", decoded); 
 
+    const user = await User.findById(decoded.id);
     if (!user) {
       return res.status(401).json({
         status: 'fail',
@@ -26,14 +27,18 @@ exports.protect = async (req, res, next) => {
     }
 
     req.user = user;
+    console.log("Authenticated User:", req.user); 
     next();
   } catch (error) {
+    console.error("Auth Error:", error); 
     res.status(401).json({
       status: 'fail',
-      message: 'Invalid token or authorization failed'
+      message: 'Invalid token or authorization failed',
+      error: error.message
     });
   }
 };
+
 
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
