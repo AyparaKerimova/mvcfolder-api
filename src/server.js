@@ -16,7 +16,10 @@ const app = express();
 const server = createServer(app); 
 const io = new Server(server, {
   cors: {
-    origin: "https://netflixcopy-pi.vercel.app" || "http://localhost:5173",
+    origin: [
+      "http://localhost:5173", 
+      "https://netflixcopy-pi.vercel.app",
+    ],
     methods: ["GET", "POST"],
   },
 });
