@@ -19,7 +19,7 @@ const io = new Server(server, {
   cors: {
     origin: [
       "http://localhost:5173", 
-      "https://netflixcopy-pi.vercel.app",
+      "https://netflix-iota-sable.vercel.app",
     ],
     methods: ["GET", "POST"],
   },
